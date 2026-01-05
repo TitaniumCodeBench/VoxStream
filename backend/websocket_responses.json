@@ -1,0 +1,119 @@
+{
+  "websocket_endpoints": {
+    "/ws": {
+      "description": "WebSocket endpoint for real-time speech-to-text transcription",
+      "connection_url": "ws://localhost:8000/ws",
+      "responses": {
+        "transcription_message": {
+          "type": "transcription",
+          "text": "The transcribed text from speech",
+          "timestamp": 1234567.89
+        },
+        "error_message": {
+          "type": "error",
+          "error": "Error description message"
+        },
+        "initialization_error": {
+          "type": "error",
+          "error": "Failed to start recorder"
+        }
+      },
+      "behavior": {
+        "on_connect": "Starts the STT recorder automatically",
+        "on_disconnect": "Stops the STT recorder automatically",
+        "update_frequency": "Sends transcription when speech is detected (approximately every 50ms check)",
+        "data_sent": "Only sends when text is detected and not empty"
+      }
+    },
+    "/status-ws": {
+      "description": "WebSocket endpoint for real-time recorder status updates",
+      "connection_url": "ws://localhost:8000/status-ws",
+      "responses": {
+        "status_message": {
+          "type": "status",
+          "status": {
+            "is_recording": false,
+            "is_running": false,
+            "is_shut_down": true,
+            "error": "Recorder not initialized"
+          },
+          "timestamp": 1234567.89
+        },
+        "status_message_running": {
+          "type": "status",
+          "status": {
+            "is_recording": true,
+            "is_running": true,
+            "is_shut_down": false
+          },
+          "timestamp": 1234567.89
+        },
+        "error_message": {
+          "type": "error",
+          "error": "Error description message"
+        }
+      },
+      "behavior": {
+        "on_connect": "Accepts connection and starts sending status updates",
+        "on_disconnect": "Closes connection gracefully",
+        "update_frequency": "Sends status updates every 500ms (0.5 seconds)",
+        "data_sent": "Always sends status regardless of recorder state"
+      }
+    }
+  },
+  "http_endpoints": {
+    "/": {
+      "method": "GET",
+      "description": "Health check endpoint",
+      "response": {
+        "status": "online",
+        "recorder_initialized": true,
+        "active_transcription_clients": 1
+      }
+    },
+    "/status": {
+      "method": "GET",
+      "description": "Get current recorder status via HTTP",
+      "response": {
+        "status": {
+          "is_recording": false,
+          "is_running": false,
+          "is_shut_down": true,
+          "error": "Recorder not initialized"
+        }
+      }
+    }
+  },
+  "field_descriptions": {
+    "type": "Message type identifier ('transcription', 'status', or 'error')",
+    "text": "The transcribed speech text (only in transcription messages)",
+    "timestamp": "Server timestamp when the message was sent (in seconds since epoch)",
+    "status": "Object containing recorder status information",
+    "is_recording": "Boolean indicating if the recorder is actively recording audio",
+    "is_running": "Boolean indicating if the recorder process is running",
+    "is_shut_down": "Boolean indicating if the recorder has been shut down",
+    "error": "Error message string (present when there's an error)",
+    "active_transcription_clients": "Number of clients currently connected to /ws endpoint"
+  },
+  "usage_examples": {
+    "javascript_transcription": {
+      "code": "const ws = new WebSocket('ws://localhost:8000/ws');\n\nws.onmessage = (event) => {\n  const data = JSON.parse(event.data);\n  if (data.type === 'transcription') {\n    console.log('Transcription:', data.text);\n  } else if (data.type === 'error') {\n    console.error('Error:', data.error);\n  }\n};\n\nws.onerror = (error) => {\n  console.error('WebSocket error:', error);\n};\n\nws.onclose = () => {\n  console.log('Connection closed');\n};"
+    },
+    "javascript_status": {
+      "code": "const statusWs = new WebSocket('ws://localhost:8000/status-ws');\n\nstatusWs.onmessage = (event) => {\n  const data = JSON.parse(event.data);\n  if (data.type === 'status') {\n    console.log('Recorder Status:', data.status);\n    console.log('Is Recording:', data.status.is_recording);\n    console.log('Is Running:', data.status.is_running);\n  }\n};"
+    },
+    "python_transcription": {
+      "code": "import asyncio\nimport websockets\nimport json\n\nasync def transcription_client():\n    uri = 'ws://localhost:8000/ws'\n    async with websockets.connect(uri) as websocket:\n        while True:\n            message = await websocket.recv()\n            data = json.loads(message)\n            if data['type'] == 'transcription':\n                print(f\"Transcription: {data['text']}\")\n            elif data['type'] == 'error':\n                print(f\"Error: {data['error']}\")\n\nasyncio.run(transcription_client())"
+    },
+    "python_status": {
+      "code": "import asyncio\nimport websockets\nimport json\n\nasync def status_client():\n    uri = 'ws://localhost:8000/status-ws'\n    async with websockets.connect(uri) as websocket:\n        while True:\n            message = await websocket.recv()\n            data = json.loads(message)\n            if data['type'] == 'status':\n                status = data['status']\n                print(f\"Recording: {status['is_recording']}, Running: {status['is_running']}\")\n\nasyncio.run(status_client())"
+    }
+  },
+  "notes": {
+    "recorder_lifecycle": "The /ws endpoint automatically starts the recorder on connect and stops it on disconnect to save resources",
+    "status_endpoint": "The /status-ws endpoint does not affect the recorder state, it only monitors it",
+    "error_handling": "Both endpoints send error messages with type='error' when issues occur",
+    "cors": "CORS is enabled for localhost:5173, localhost:3000, 127.0.0.1:5173, and 127.0.0.1:3000",
+    "timestamp_format": "Timestamps are in seconds since epoch (Unix time) as floating point numbers"
+  }
+}

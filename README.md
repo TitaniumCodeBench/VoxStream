@@ -1,16 +1,107 @@
-# React + Vite
+# STT | Speech To Text Converter System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A state-of-the-art, real-time speech-to-text conversion system featuring a modern glassmorphism interface. This project leverages **FastAPI** on the backend and **React** on the frontend to provide a seamless, low-latency transcription experience.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Real-time Transcription**: Instant speech-to-text conversion with minimal latency using the `RealtimeSTT` library.
+- **Modern UI/UX**: Premium glassmorphism design with a responsive layout, vibrant gradients, and smooth animations.
+- **Live Status Monitoring**:
+  - **LIVE**: A pulsing visual indicator showing active microphone recording.
+  - **ENGINE READY**: Real-time status of the transcription engine.
+- **WebSocket Streaming**: Persistent full-duplex communication for immediate text updates.
+- **One-Click Clear**: Easily reset your transcription session.
+- **Optimized for Performance**: Built with **Vite** and **FastAPI** for a fast, lightweight experience.
 
-## React Compiler
+## 🛠️ Technology Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Backend
 
-## Expanding the ESLint configuration
+- **Python**: Core logic and processing.
+- **FastAPI**: High-performance web framework for APIs and WebSockets.
+- **RealtimeSTT**: Advanced audio-to-text recorder and processor.
+- **Uvicorn**: ASGI server for running the backend.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Frontend
+
+- **React 19**: Modern UI component library.
+- **Vite**: Ultra-fast build tool and development server.
+- **Vanilla CSS**: Custom-built design system with modern typography (Outfit via Google Fonts).
+- **WebSockets**: Real-time data synchronization.
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.10+
+- Node.js & npm
+
+### Installation
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone <repository-url>
+   cd STT_System
+   ```
+
+2. **Backend Setup**:
+
+   ```bash
+   # Create a virtual environment
+   python -m venv .venv
+
+   # Activate virtual environment (Windows)
+   .\.venv\Scripts\activate
+
+   # Install dependencies
+   pip install -r backend/requirements.txt
+   ```
+
+3. **Frontend Setup**:
+   ```bash
+   npm install
+   ```
+
+### Configuration
+
+The backend configuration is managed via `backend/config_.js`. You can specify the model and language:
+
+```json
+{
+  "MODEL": "base.en",
+  "LANGUAGE": "en"
+}
+```
+
+### Running the Application
+
+You can run both the frontend and backend concurrently with a single command:
+
+```bash
+npm start
+```
+
+- **Frontend**: [http://localhost:5173](http://localhost:5173)
+- **Backend (FastAPI)**: [http://localhost:8000](http://localhost:8000)
+
+## 📁 Project Structure
+
+```text
+STT_System/
+├── backend/
+│   ├── main.py            # FastAPI application & STT logic
+│   ├── config_.js         # STT configuration (Model/Language)
+│   └── requirements.txt   # Python dependencies
+├── src/
+│   ├── App.jsx            # Main React component
+│   ├── App.css            # Modern glassmorphism styles
+│   └── main.jsx           # React entry point
+├── public/                # Static assets
+├── index.html             # HTML entry point with Google Fonts
+└── package.json           # Node.js dependencies and scripts
+```
+
+## 📝 License
+
+This project is licensed under the MIT License.
