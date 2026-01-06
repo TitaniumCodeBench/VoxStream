@@ -41,7 +41,7 @@ A state-of-the-art, real-time speech-to-text conversion system featuring a moder
 1. **Clone the repository**:
 
    ```bash
-   git clone [<repository-url>](https://github.com/TitaniumCodeBench/VoxStream.git)
+   git clone https://github.com/TitaniumCodeBench/VoxStream.git
    cd VoxStream
    ```
 
@@ -65,7 +65,7 @@ A state-of-the-art, real-time speech-to-text conversion system featuring a moder
 
 ### Configuration
 
-The backend configuration is managed via `backend/config_.js`. You can specify the model and language:
+The backend configuration is managed via `backend/config_.json`. You can specify the model and language:
 
 ```json
 {
@@ -91,11 +91,12 @@ npm start
 STT_System/
 ├── backend/
 │   ├── main.py            # FastAPI application & STT logic
-│   ├── config_.js         # STT configuration (Model/Language)
+│   ├── config_.json       # STT configuration (Model/Language)
 │   └── requirements.txt   # Python dependencies
 ├── src/
 │   ├── App.jsx            # Main React component
 │   ├── App.css            # Modern glassmorphism styles
+│   ├── index.css          # Main css styles
 │   └── main.jsx           # React entry point
 ├── public/                # Static assets
 ├── index.html             # HTML entry point with Google Fonts
