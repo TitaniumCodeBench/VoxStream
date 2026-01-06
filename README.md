@@ -110,6 +110,10 @@ STT_System/
 └── package.json           # Node.js dependencies and scripts
 ```
 
+### I have used a library called RealtimeSTT for the STT functionality, which was created by the @KoljaB. A special thanks to him for creating this library.
+
+### I would love if you could contribute to this project.
+
 ## 📝 License
 
 This project is licensed under the MIT License.
