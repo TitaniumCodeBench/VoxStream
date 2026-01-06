@@ -13,6 +13,10 @@ A state-of-the-art, real-time speech-to-text conversion system featuring a moder
 - **One-Click Clear**: Easily reset your transcription session.
 - **Optimized for Performance**: Built with **Vite** and **FastAPI** for a fast, lightweight experience.
 
+## 📸 Project Images
+
+
+
 ## 🛠️ Technology Stack
 
 ### Backend
