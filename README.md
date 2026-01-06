@@ -42,7 +42,7 @@ A state-of-the-art, real-time speech-to-text conversion system featuring a moder
 
    ```bash
    git clone <repository-url>
-   cd STT_System
+   cd VoxStream
    ```
 
 2. **Backend Setup**:
