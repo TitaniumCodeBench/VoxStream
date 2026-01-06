@@ -1,4 +1,4 @@
-# STT | Speech To Text Converter System
+# VoxStream | Speech To Text Converter System
 
 A state-of-the-art, real-time speech-to-text conversion system featuring a modern glassmorphism interface. This project leverages **FastAPI** on the backend and **React** on the frontend to provide a seamless, low-latency transcription experience.
 
