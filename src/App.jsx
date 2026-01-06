@@ -169,7 +169,7 @@ function App() {
           </nav>
 
           <div className="footer-sidebar">
-            <p>v2.1.0 Premium Access</p>
+            <p>v2.1.0 VoxStream</p>
           </div>
         </aside>
 
