@@ -18,9 +18,6 @@ A state-of-the-art, real-time speech-to-text conversion system featuring a moder
 <p align="center">
   <img src="./public/demo_image.png" alt="VoxStream" title="VoxStream"
   style="width: 100%; height: auto; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 217, 255, 0.2); margin-bottom: 24px;">
-  <video src="./public/demo_video.mp4" width="100%" controls style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 217, 255, 0.2);">
-    Your browser does not support the video tag.
-  </video>
 </p>
 
 ## 🛠️ Technology Stack
