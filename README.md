@@ -41,7 +41,7 @@ A state-of-the-art, real-time speech-to-text conversion system featuring a moder
 1. **Clone the repository**:
 
    ```bash
-   git clone <repository-url>
+   git clone [<repository-url>](https://github.com/TitaniumCodeBench/VoxStream.git)
    cd VoxStream
    ```
 
