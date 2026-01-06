@@ -1,125 +1,235 @@
-import { useState, useEffect } from 'react'
-import "./App.css"
+import { useState, useEffect, useRef } from 'react';
+import './App.css';
 
 function App() {
-  // States
-  const [Text, setText] = useState("")
-  const [is_recording, setIs_Recording] = useState(false)
-  const [is_running, setIs_Running] = useState(false)
-  const [is_shut_down, setIs_Shut_Down] = useState(false)
-  const [is_server_running, setIs_Server_Running] = useState(false)
+  const [text, setText] = useState("");
+  const [isServerRunning, setIsServerRunning] = useState(false);
+  const [status, setStatus] = useState({
+    is_recording: false,
+    is_running: false,
+    is_shut_down: true,
+    is_initializing: false
+  });
+  const [connectionStatus, setConnectionStatus] = useState("disconnected");
+  const [isCopying, setIsCopying] = useState(false);
+
+  const textWs = useRef(null);
+  const statusWs = useRef(null);
+  const scrollRef = useRef(null);
+  const reconnectTimeout = useRef(null);
 
   useEffect(() => {
-    check_server()
-  }, [])
+    checkServer();
+    const interval = setInterval(checkServer, 5000);
+    return () => {
+      clearInterval(interval);
+      if (textWs.current) textWs.current.close();
+      if (statusWs.current) statusWs.current.close();
+    };
+  }, []);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [text]);
 
-  const check_server = async () => {
+  const checkServer = async () => {
     try {
-      const res = await fetch("http://localhost:8000/")
-      if (res.ok) {
-        console.log("Server is running")
-        setIs_Server_Running(true)
-        transcribe_text()
-        status()
-
+      const response = await fetch('http://localhost:8000/');
+      if (response.ok) {
+        setIsServerRunning(true);
+        if (!textWs.current || textWs.current.readyState === WebSocket.CLOSED) {
+          connectWebSockets();
+        }
       } else {
-        console.log("Server error")
+        throw new Error();
       }
-    } catch {
-      console.log("Server is not running")
-      setIs_Server_Running(false)
+    } catch (error) {
+      setIsServerRunning(false);
+      setConnectionStatus("disconnected");
+      setStatus(prev => ({ ...prev, is_shut_down: true, is_initializing: false }));
     }
-  }
+  };
 
-  const transcribe_text = async () => {
-    const text = new WebSocket("ws://localhost:8000/ws")
-    text.onopen = () => {
-      console.log("Connected to server")
+  const connectWebSockets = () => {
+    if (connectionStatus === "connecting") return;
+    setConnectionStatus("connecting");
+
+    // Transcription WebSocket
+    if (textWs.current) textWs.current.close();
+    textWs.current = new WebSocket("ws://localhost:8000/ws");
+
+    textWs.current.onopen = () => {
+      console.log("Transcription WS: Connected");
+      setConnectionStatus("connected");
+    };
+
+    textWs.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "transcription" && data.text) {
+          setText(prev => (prev ? prev + " " + data.text : data.text));
+        }
+      } catch (e) {
+        console.error("Failed to parse transcription message", e);
+      }
+    };
+
+    textWs.current.onclose = () => {
+      console.log("Transcription WS: Disconnected");
+      setConnectionStatus("disconnected");
+    };
+
+    // Status WebSocket
+    if (statusWs.current) statusWs.current.close();
+    statusWs.current = new WebSocket("ws://localhost:8000/status-ws");
+
+    statusWs.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "status" && data.status) {
+          setStatus(data.status);
+        }
+      } catch (e) {
+        console.error("Failed to parse status message", e);
+      }
+    };
+  };
+
+  const handleAction = async (action) => {
+    try {
+      const response = await fetch(`http://localhost:8000/${action}`);
+      if (response.ok) {
+        await checkServer();
+      }
+    } catch (err) {
+      console.error(`Failed to ${action}:`, err);
     }
-    text.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      setText(prev => prev + data.text)
-    }
-    text.onerror = (error) => {
-      console.log(error)
-      check_server()
-    }
-  }
+  };
 
-  const status = async () => {
-    const status = new WebSocket("ws://localhost:8000/status-ws")
-    status.onopen = () => {
-      console.log("Connected to server")
-    }
-    status.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      setIs_Recording(data.status.is_recording)
-      setIs_Running(data.status.is_running)
-      setIs_Shut_Down(data.status.is_shut_down)
-    }
-    status.onerror = (error) => {
-      console.log(error)
-      check_server()
-    }
-  }
+  const clearText = () => setText("");
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(text);
+    setIsCopying(true);
+    setTimeout(() => setIsCopying(false), 2000);
+  };
 
-
-
-
-  const clear_text = () => {
-    setText("")
-  }
-
-  if (!is_server_running) {
-    return (
-      <div className="server_error">
-        <h1>Server is not running</h1>
-        <p>Please start the backend server to use the application.</p>
-      </div>
-    )
-  }
   return (
-    <div className="wrapper">
-      <div className="navbar">
-        <span className="brand">S T T</span>
-        <div className="status_container">
-          <div className="status_item">
-            <div className={`dot ${is_recording ? 'dot_red' : 'dot_gray'}`}></div>
-            <span>{is_recording ? "RECORDING" : "MIC IDLE"}</span>
-          </div>
-          <div className="status_item">
-            <div className={`dot ${is_running ? 'dot_green' : 'dot_gray'}`}></div>
-            <span>{is_running ? "RUNNING" : "STANDBY"}</span>
-          </div>
-          {is_shut_down && (
-            <div className="status_item">
-              <div className="dot dot_red"></div>
-              <span>SHUTTING DOWN</span>
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="app-container">
+      <div className="glass-blob blob-1"></div>
+      <div className="glass-blob blob-2"></div>
 
-      <div className="body_wrapper">
-        <h3>Live Transcription</h3>
-        <div className="transcribe_text_wrapper">
-          <span className="transcribe_text">{Text}</span>
-        </div>
-        <div className="controls">
-          <button onClick={clear_text} title="Clear All Text" className="button">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-            </svg>
-            Clear Transcription
-          </button>
-        </div>
+      <div className="main-layout">
+        <aside className="sidebar">
+          <div className="brand">
+            <div className="logo-icon">
+              <div className="outer-ring"></div>
+              <div className="inner-ring"></div>
+              <div className="core"></div>
+            </div>
+            <h1>VOX<span>STREAM</span></h1>
+          </div>
+
+          <nav className="controls">
+            <div className="control-group">
+              <label>Engine Control</label>
+              <button
+                className={`btn-action ${(!status.is_shut_down || status.is_initializing) ? 'disabled' : ''}`}
+                onClick={() => handleAction('start')}
+                disabled={!status.is_shut_down || status.is_initializing}
+              >
+                {status.is_initializing ? 'Warming Up...' : 'Initialize Engine'}
+              </button>
+              <button
+                className={`btn-action danger ${status.is_shut_down ? 'disabled' : ''}`}
+                onClick={() => handleAction('shutdown')}
+                disabled={status.is_shut_down}
+              >
+                Kill Session
+              </button>
+            </div>
+
+            <div className="control-group">
+              <label>System Monitor</label>
+              <div className="stat-row">
+                <span>Server</span>
+                <span className={`badge ${isServerRunning ? 'online' : 'offline'}`}>
+                  {isServerRunning ? 'ONLINE' : 'OFFLINE'}
+                </span>
+              </div>
+              <div className="stat-row">
+                <span>WebSocket</span>
+                <span className={`badge ${connectionStatus}`}>
+                  {connectionStatus.toUpperCase()}
+                </span>
+              </div>
+            </div>
+          </nav>
+
+          <div className="footer-sidebar">
+            <p>v2.1.0 Premium Access</p>
+          </div>
+        </aside>
+
+        <section className="content">
+          <header className="content-header">
+            <div className="status-cards">
+              <div className={`status-card ${status.is_recording ? 'active-rec' : ''} ${status.is_initializing ? 'initializing' : ''}`}>
+                <div className="card-icon rec">●</div>
+                <div className="card-info">
+                  <span className="card-label">Recorder</span>
+                  <span className="card-value">
+                    {status.is_initializing ? 'INITIALIZING' : status.is_recording ? 'RECORDING' : 'READY'}
+                  </span>
+                </div>
+                {status.is_recording && (
+                  <div className="waveform">
+                    <div className="bar"></div><div className="bar"></div><div className="bar) "></div><div className="bar"></div>
+                  </div>
+                )}
+              </div>
+
+              <div className={`status-card ${status.is_running ? 'active-run' : ''} ${status.is_initializing ? 'initializing' : ''}`}>
+                <div className="card-icon run">▶</div>
+                <div className="card-info">
+                  <span className="card-label">Engine</span>
+                  <span className="card-value">
+                    {status.is_initializing ? 'INITIALIZING' : status.is_running ? 'ACTIVE' : 'IDLE'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="transcript-area">
+            <div className="glass-panel">
+              <div className="panel-header">
+                <h3>Live Transcription Output</h3>
+                <div className="panel-actions">
+                  <button onClick={copyToClipboard} className={`icon-btn ${isCopying ? 'copied' : ''}`} title="Copy Text">
+                    {isCopying ? '✓' : '⎘'}
+                  </button>
+                  <button onClick={clearText} className={`icon-btn icon-btn-del`} title="Clear All">🗑</button>
+                </div>
+              </div>
+              <div className="text-viewport" ref={scrollRef}>
+                {text ? (
+                  <p className="transcribed-text">{text}</p>
+                ) : (
+                  <div className="empty-state">
+                    <div className="scanner"></div>
+                    <p>Awaiting...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </main>
+        </section>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
